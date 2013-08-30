@@ -5,7 +5,7 @@ DESCRIPTION = "A MongoDB object mapper inspired by Django models and SQLAlchemy'
 with open('README') as f:
     LONG_DESCRIPTION = f.read()
 
-VERSION = '0.1.0'
+VERSION = '0.1.1'
 
 CLASSIFIERS = [
     'Intended Audience :: Developers',
@@ -27,7 +27,7 @@ setup(
     description=DESCRIPTION,
     long_description=LONG_DESCRIPTION,
     install_requires=[
-        'pymongo>=2.3',
+        'pymongo>=2.6',
     ],
     platforms=['any'],
     classifiers=CLASSIFIERS,
