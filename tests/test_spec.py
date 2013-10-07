@@ -10,7 +10,7 @@ class Settings(documents.EmbeddedDocument):
 
 class Widget(documents.EmbeddedDocument):
     index = fields.IntegerField()
-    
+
 class User(documents.Document):
     username = fields.StringField()
     email = fields.EmailField()
@@ -148,6 +148,30 @@ class SpecTest(unittest.TestCase):
         update &= User.following.push(10)
 
         self.assertEqual(update, {'$set': {'username': 'stanislav'}, '$push': {'following': 10, 'followers': 5}, '$pop': {'following': 1}})
+
+    def test_update_embed_list_spec(self):
+        spec = User.widgets.push(Widget(index=2)) &\
+            User.widgets.pull(Widget.index==1)
+        self.assertEqual(spec, {
+                '$pull': {
+                    'widgets': {'index': 1}
+                },
+                '$push': {
+                    'widgets': {'index': 2}
+                }
+            })
+
+    # This won't pass, due to a limitation of mongodb: https://jira.mongodb.org/browse/SERVER-1050
+    def est_update_embed_list_update_with_spec(self):
+        user = User(username='tin', email='tin@abc.com')
+        user.widgets = [Widget(index=1)]
+        user.save()
+        print '111'
+        User.objects.filter_by(username='tin').update(User.widgets.push(Widget(index=2)) &\
+            User.widgets.pull(Widget.index==1))
+        widgets = User.objects.filter(User.username=='tin').one().widgets
+        self.assertEquals(2, len(widgets))
+        self.assertEqual(2, widgets[0].index)
 
     def test_or(self):
         spec = User.followers == 2
