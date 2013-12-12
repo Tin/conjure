@@ -20,8 +20,9 @@ class DocumentMeta(type):
         _name = [name]
         _superclasses = {}
 
+        # about auto_start_request, please see this: http://emptysqua.re/blog/requests-in-python-and-mongodb/
         _meta = {
-            'db': 'mongodb://localhost:27017/_conjure?connectTimeoutMS=30000&socketTimeoutMS=30000&maxPoolSize=50&waitQueueTimeoutMS=20000&auto_start_request=true&use_greenlets=true',
+            'db': 'mongodb://localhost:27017/_conjure?connectTimeoutMS=30000&socketTimeoutMS=30000&maxPoolSize=50&waitQueueTimeoutMS=20000&auto_start_request=false&use_greenlets=true',
             'verbose_name': name.lower(),
             'verbose_name_plural': name.lower() + 's',
             'collection': name.lower() + 's',
