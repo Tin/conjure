@@ -6,8 +6,45 @@ from .utils import lookup_field
 import copy
 import pymongo
 import pymongo.errors
+from pymongo.errors import AutoReconnect
 import pprint
 import re
+from time import sleep
+from random import random
+import logging
+
+
+class CollectionProxy(object):
+    def __init__(self, owner, max_retreis=10):
+        self.owner = owner
+        self.max_retreis = max_retreis
+        self.connect()
+
+    def connect(self):
+        db = connect(self.owner._meta['db'])
+        self._connection = db[self.owner._meta['collection']]
+
+    def __getattr__(self, name):
+        def action(name, retries=0):
+            actual_action = getattr(self._connection, name)
+
+            def wrapped_action(*args, **kwargs):
+                try:
+                    return actual_action(*args, **kwargs)
+                except AutoReconnect, e:
+                    if retries > self.max_retreis:
+                        logging.warn('[Conjure] Stop retrying, failed to connect MongoDB after retried for %s times' % retries)
+                        raise e
+                    sleep_time = 0.5 + (random() * 0.5) # 0.5 ~ 1
+                    logging.warn('[Conjure] Auto Reconnect MongoDB in conjure after %.2f seconds (retries %s times)' %\
+                        (sleep_time, retries))
+                    sleep(sleep_time)
+                    self.connect()
+                    return action(name, retries + 1)(*args, **kwargs)
+
+            return wrapped_action
+
+        return action(name)
 
 
 class Manager(object):
@@ -19,8 +56,7 @@ class Manager(object):
             return self
 
         if self._collection is None:
-            db = connect(owner._meta['db'])
-            self._collection = db[owner._meta['collection']]
+            self._collection = CollectionProxy(owner)
 
         return Query(owner, self._collection)
 
