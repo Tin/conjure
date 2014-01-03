@@ -9,7 +9,10 @@ import pymongo.errors
 from pymongo.errors import AutoReconnect
 import pprint
 import re
-from time import sleep
+try:
+    from gevent import sleep
+except:
+    from time import sleep
 from random import random
 import logging
 
